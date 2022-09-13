@@ -84,8 +84,10 @@ var constructor = function() {
             } else if (
                 event.EventDataType == MessageType.Commerce &&
                 event.ProductAction &&
+                (event.ProductAction.ProductActionType ==
+                    window.mParticle.ProductActionType.Purchase ||
                 event.ProductAction.ProductActionType ==
-                    window.mParticle.ProductActionType.Purchase
+                    window.mParticle.ProductActionType.Refund)
             ) {
                 reportEvent = true;
                 logCommerceEvent(event);
@@ -225,10 +227,16 @@ var constructor = function() {
                 ', useMixpanelPeople flag is not set'
             );
         }
-
+        
+        var totalAmount = event.ProductAction.TotalAmount;
+        if (event.ProductAction.ProductActionType
+            == window.mParticle.ProductActionType.Refund) {
+            totalAmount = -Math.abs(totalAmount);
+        }
+        
         try {
             mixpanel.mparticle.people.track_charge(
-                event.ProductAction.TotalAmount,
+                totalAmount,
                 { $time: new Date().toISOString() }
             );
         } catch (e) {
