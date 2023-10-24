@@ -466,7 +466,8 @@ describe('Mixpanel Forwarder', function () {
                 'email',
                 'dpatel@mparticle.com'
             );
-            window.mixpanel.mparticle.should.have.property('unsetCalled', true);
+            // FIXME: Temporarily breaking this to verify tests run
+            window.mixpanel.mparticle.should.have.property('unsetCalled', false/* true */);
             window.mixpanel.mparticle.data.should.be.an
                 .instanceof(Object)
                 .and.not.have.property('email', 'dpatel@mparticle.com');
