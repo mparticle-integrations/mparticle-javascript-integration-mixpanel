@@ -137,6 +137,24 @@ var constructor = function () {
         }
     }
 
+    function onLogoutComplete() {
+        if (!isInitialized) {
+            return (
+                'Cannot call logout on forwarder: ' +
+                name +
+                ', not initialized'
+            );
+        }
+
+        try {
+            mixpanel.mparticle.reset();
+
+            return 'Successfully called reset on forwarder: ' + name;
+        } catch (e) {
+            return 'Cannot call reset on forwarder: ' + name + ': ' + e;
+        }
+    }
+
     function onUserIdentified(user) {
         var idForMixpanel;
         var userIdentities = user.getUserIdentities()
@@ -245,8 +263,17 @@ var constructor = function () {
     this.process = processEvent;
     this.setUserAttribute = setUserAttribute;
     this.setUserIdentity = setUserIdentity;
-    this.onUserIdentified = onUserIdentified;
     this.removeUserAttribute = removeUserAttribute;
+    
+    // For all Identity Requests, we run mixpanel.identify(<device_id)
+    // as per Mixpanel's documentation https://docs.mixpanel.com/docs/tracking-methods/identifying-users
+    // except when a user logs out, where we run mixpanel.reset() to
+    // detach the distinct_id from the device_id
+    this.onLogoutComplete = onLogoutComplete;
+
+    this.onLoginComplete = onUserIdentified;
+    this.onIdentifyComplte = onUserIdentified;
+    this.onModifyComplete = onUserIdentified;
 };
 
 function getId() {
