@@ -13,6 +13,15 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
+// ** Glossary of terms
+// Mixpanel Terms:
+// user_id: A unique identifier used by the Mixpanel.identify method to identify a unique user
+// device_id: A unique identifier used by Mixpanel to identify an anonymous user, usually a guid
+// distinct_id: A unique identifier that Mixpanel uses to bridge a user and a device. Usually the
+//              distinct_id has a prefix of $device:guid<device_id> to denote an anonymouse user
+//              and this will be replaced by the user_id once the user has been identified by
+//              a request to Mixpanel.identify
+
 // eslint-disable-next-line no-redeclare
 var name = 'MixpanelEventForwarder',
     moduleId = 10,
@@ -288,15 +297,15 @@ var constructor = function () {
 
     this.onLoginComplete = onLoginComplete;
 
-    // For all Identity Requests, we run mixpanel.identify(<device_id)
+    // For all Identity Requests, we run mixpanel.identify(<user_id>)
     // as per Mixpanel's documentation https://docs.mixpanel.com/docs/tracking-methods/identifying-users
     // except when a user logs out, where we run mixpanel.reset() to
-    // detach the distinct_id from the device_id
+    // detach the Mixpanel distinct_id from the Mixpanel device_id
     this.onLogoutComplete = onLogoutComplete;
 
     // For these two methods, we are essentially passing along the
     // Identify request the same way.
-    this.onIdentifyComplte = sendIdentifyRequest;
+    this.onIdentifyComplete = sendIdentifyRequest;
     this.onModifyComplete = sendIdentifyRequest;
 };
 
