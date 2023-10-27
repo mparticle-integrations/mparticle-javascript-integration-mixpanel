@@ -12,6 +12,8 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
+
+// eslint-disable-next-line no-redeclare
 var name = 'MixpanelEventForwarder',
     moduleId = 10,
     MessageType = {
@@ -32,7 +34,8 @@ var renderSnippet = function() {
 }
 /* eslint-enable */
 
-var constructor = function() {
+// eslint-disable-next-line no-redeclare
+var constructor = function () {
     var self = this,
         isInitialized = false,
         forwarderSettings = null,
@@ -229,7 +232,9 @@ var constructor = function() {
         try {
             mixpanel.mparticle.people.track_charge(
                 event.ProductAction.TotalAmount,
-                { $time: new Date().toISOString() }
+                {
+                    $time: new Date().toISOString(),
+                }
             );
         } catch (e) {
             return 'Cannot log commerce event on forwarder: ' + name + ': ' + e;
@@ -294,6 +299,7 @@ if (typeof window !== 'undefined') {
     }
 }
 
+// eslint-disable-next-line no-undef
 module.exports = {
     register: register,
 };
