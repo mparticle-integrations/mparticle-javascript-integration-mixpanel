@@ -168,6 +168,11 @@ var constructor = function () {
     }
 
     function onLogoutComplete() {
+        // For all Identity Requests, we run mixpanel.identify(<user_id>)
+        // as per Mixpanel's documentation https://docs.mixpanel.com/docs/tracking-methods/identifying-users
+        // except when a user logs out, where we run mixpanel.reset() to
+        // detach the Mixpanel distinct_id from the Mixpanel device_id
+
         if (!isInitialized) {
             return (
                 'Cannot call logout on forwarder: ' + name + ', not initialized'
@@ -183,12 +188,44 @@ var constructor = function () {
         }
     }
 
-    function sendIdentifyRequest(user, userIdentities) {
-        var idForMixpanel;
+    function onIdentifyComplete(user) {
+        // When mParticle identifies a user, the user might
+        // actually be anonymous. We only want to send an
+        // identify request to Mixpanel if the user is
+        // actually known. Only known (logged in) users
+        // will have userIdentities.
+        var userIdentities = getUserIdentities(user);
 
-        if (isEmpty(userIdentities)) {
-            userIdentities = getUserIdentities(user);
+        if (!isEmpty(userIdentities)) {
+            sendIdentifyRequest(user, userIdentities);
+        } else {
+            return 'User is anonymous';
         }
+    }
+
+    function onModifyComplete(user) {
+        // Mixpanel does not have the concept of modifying a
+        // user's identity. For the time being, we will rely on
+        // doing a simple Mixpanel.identify request. However
+        // this method may be deprecated in a future release
+        var userIdentities = getUserIdentities(user);
+
+        if (!isEmpty(userIdentities)) {
+            sendIdentifyRequest(user, userIdentities);
+        } else {
+            return 'User is anonymous';
+        }
+    }
+
+    function sendIdentifyRequest(user, userIdentities) {
+        // We should only make Mixpanel.identify requests
+        // when a user has userIdentities and is therefore
+        // a known mParticle user and not anonymous
+        if (isEmpty(userIdentities)) {
+            return;
+        }
+
+        var idForMixpanel;
 
         switch (forwarderSettings.userIdentificationType) {
             case 'CustomerId':
@@ -295,18 +332,10 @@ var constructor = function () {
     this.setUserIdentity = setUserIdentity;
     this.removeUserAttribute = removeUserAttribute;
 
+    this.onIdentifyComplete = onIdentifyComplete;
     this.onLoginComplete = onLoginComplete;
-
-    // For all Identity Requests, we run mixpanel.identify(<user_id>)
-    // as per Mixpanel's documentation https://docs.mixpanel.com/docs/tracking-methods/identifying-users
-    // except when a user logs out, where we run mixpanel.reset() to
-    // detach the Mixpanel distinct_id from the Mixpanel device_id
     this.onLogoutComplete = onLogoutComplete;
-
-    // For these two methods, we are essentially passing along the
-    // Identify request the same way.
-    this.onIdentifyComplete = sendIdentifyRequest;
-    this.onModifyComplete = sendIdentifyRequest;
+    this.onModifyComplete = onModifyComplete;
 };
 
 function getId() {

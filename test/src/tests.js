@@ -419,7 +419,7 @@ describe('Mixpanel Forwarder', function () {
                     true
                 );
 
-                mParticle.forwarder.onIdentifyComplte(user);
+                mParticle.forwarder.onIdentifyComplete(user);
                 window.mixpanel.mparticle.should.have.property(
                     'identifyCalled',
                     true
