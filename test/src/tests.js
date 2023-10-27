@@ -148,7 +148,30 @@ describe('Mixpanel Forwarder', function () {
     }
     var API_HOST = 'https://api.mixpanel.com';
 
-    before(function () {
+    var identificationTypes = [
+        {
+            userIdentificationType: 'CustomerId',
+            expectedProperty: 'cust1',
+        },
+        {
+            userIdentificationType: 'Other',
+            expectedProperty: 'other1',
+        },
+        {
+            userIdentificationType: 'Other2',
+            expectedProperty: 'other2',
+        },
+        {
+            userIdentificationType: 'Other3',
+            expectedProperty: 'other3',
+        },
+        {
+            userIdentificationType: 'Other4',
+            expectedProperty: 'other4',
+        },
+    ];
+
+    beforeEach(function () {
         window.mixpanel = new MPMock();
         mParticle.forwarder.init(
             {
@@ -289,7 +312,6 @@ describe('Mixpanel Forwarder', function () {
         });
 
         it('should log in a user (mParticle SDK v2)', function (done) {
-
             var user = {
                 getUserIdentities: function () {
                     return {
@@ -307,53 +329,68 @@ describe('Mixpanel Forwarder', function () {
                 },
             };
 
-            var identificationTypes = [
-                {
-                    userIdentificationType: 'CustomerId',
-                    expectedProperty: 'cust1'
-                },
-                {
-                    userIdentificationType: 'Other',
-                    expectedProperty: 'other1'
-                },
-                {
-                    userIdentificationType: 'Other2',
-                    expectedProperty: 'other2'
-                },
-                {
-                    userIdentificationType: 'Other3',
-                    expectedProperty: 'other3'
-                },
-                {
-                    userIdentificationType: 'Other4',
-                    expectedProperty: 'other4'
-                },
-            ];
-
             identificationTypes.forEach(function (identificationType) {
                 mParticle.forwarder.init(
                     {
                         includeUserAttributes: 'True',
-                        userIdentificationType: identificationType.userIdentificationType
+                        userIdentificationType:
+                            identificationType.userIdentificationType,
                     },
                     reportService.cb,
                     true
                 );
-    
+
                 mParticle.forwarder.onLoginComplete(user);
                 window.mixpanel.mparticle.should.have.property(
                     'identifyCalled',
                     true
                 );
-                window.mixpanel.mparticle.should.have.property('data', identificationType.expectedProperty);
-
+                window.mixpanel.mparticle.should.have.property(
+                    'data',
+                    identificationType.expectedProperty
+                );
             });
 
             done();
         });
 
-        it('should identify a user (mParticle SDK v2)', function (done) {
+        it('should NOT log in a user if they do not have user identities (mParticle SDK v2)', function (done) {
+            var user = {
+                getUserIdentities: function () {
+                    return {
+                        userIdentities: {},
+                    };
+                },
+                getMPID: function () {
+                    return 'anon-mpid1';
+                },
+            };
 
+            identificationTypes.forEach(function (identificationType) {
+                mParticle.forwarder.init(
+                    {
+                        includeUserAttributes: 'True',
+                        userIdentificationType:
+                            identificationType.userIdentificationType,
+                    },
+                    reportService.cb,
+                    true
+                );
+
+                mParticle.forwarder.onLoginComplete(user);
+                window.mixpanel.mparticle.should.have.property(
+                    'identifyCalled',
+                    false
+                );
+                window.mixpanel.mparticle.should.not.have.property(
+                    'data',
+                    identificationType.expectedProperty
+                );
+            });
+            done();
+        });
+
+        it('should identify a user (mParticle SDK v2)', function (done) {
             var user = {
                 getUserIdentities: function () {
                     return {
@@ -371,53 +408,32 @@ describe('Mixpanel Forwarder', function () {
                 },
             };
 
-            var identificationTypes = [
-                {
-                    userIdentificationType: 'CustomerId',
-                    expectedProperty: 'cust1'
-                },
-                {
-                    userIdentificationType: 'Other',
-                    expectedProperty: 'other1'
-                },
-                {
-                    userIdentificationType: 'Other2',
-                    expectedProperty: 'other2'
-                },
-                {
-                    userIdentificationType: 'Other3',
-                    expectedProperty: 'other3'
-                },
-                {
-                    userIdentificationType: 'Other4',
-                    expectedProperty: 'other4'
-                },
-            ];
-
             identificationTypes.forEach(function (identificationType) {
                 mParticle.forwarder.init(
                     {
                         includeUserAttributes: 'True',
-                        userIdentificationType: identificationType.userIdentificationType
+                        userIdentificationType:
+                            identificationType.userIdentificationType,
                     },
                     reportService.cb,
                     true
                 );
-    
+
                 mParticle.forwarder.onIdentifyComplte(user);
                 window.mixpanel.mparticle.should.have.property(
                     'identifyCalled',
                     true
                 );
-                window.mixpanel.mparticle.should.have.property('data', identificationType.expectedProperty);
-
+                window.mixpanel.mparticle.should.have.property(
+                    'data',
+                    identificationType.expectedProperty
+                );
             });
 
             done();
         });
 
-        it('should modify a user\'s identity (mParticle SDK v2)', function (done) {
-
+        it('should modify a user identity (mParticle SDK v2)', function (done) {
             var user = {
                 getUserIdentities: function () {
                     return {
@@ -435,67 +451,43 @@ describe('Mixpanel Forwarder', function () {
                 },
             };
 
-            var identificationTypes = [
-                {
-                    userIdentificationType: 'CustomerId',
-                    expectedProperty: 'cust1'
-                },
-                {
-                    userIdentificationType: 'Other',
-                    expectedProperty: 'other1'
-                },
-                {
-                    userIdentificationType: 'Other2',
-                    expectedProperty: 'other2'
-                },
-                {
-                    userIdentificationType: 'Other3',
-                    expectedProperty: 'other3'
-                },
-                {
-                    userIdentificationType: 'Other4',
-                    expectedProperty: 'other4'
-                },
-            ];
-
             identificationTypes.forEach(function (identificationType) {
                 mParticle.forwarder.init(
                     {
                         includeUserAttributes: 'True',
-                        userIdentificationType: identificationType.userIdentificationType
+                        userIdentificationType:
+                            identificationType.userIdentificationType,
                     },
                     reportService.cb,
                     true
                 );
-    
+
                 mParticle.forwarder.onModifyComplete(user);
                 window.mixpanel.mparticle.should.have.property(
                     'identifyCalled',
                     true
                 );
-                window.mixpanel.mparticle.should.have.property('data', identificationType.expectedProperty);
-
+                window.mixpanel.mparticle.should.have.property(
+                    'data',
+                    identificationType.expectedProperty
+                );
             });
 
             done();
         });
 
         it('should log out a user (mParticle SDK v2)', function (done) {
-
             mParticle.forwarder.init(
                 {
                     includeUserAttributes: 'True',
-                    userIdentificationType: 'MPID'
+                    userIdentificationType: 'MPID',
                 },
                 reportService.cb,
                 true
             );
 
             mParticle.forwarder.onLogoutComplete();
-            window.mixpanel.mparticle.should.have.property(
-                'resetCalled',
-                true
-            );
+            window.mixpanel.mparticle.should.have.property('resetCalled', true);
 
             done();
         });
