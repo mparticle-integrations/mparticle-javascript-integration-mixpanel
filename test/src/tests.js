@@ -104,8 +104,8 @@ describe('Mixpanel Forwarder', function () {
             setCalledAttributes(data, 'identifyCalled');
         };
 
-        this.mparticle.reset = function (data) {
-            setCalledAttributes(data, 'resetCalled');
+        this.mparticle.reset = function () {
+            setCalledAttributes(null, 'resetCalled');
         };
 
         this.mparticle.alias = function (data) {
@@ -149,6 +149,10 @@ describe('Mixpanel Forwarder', function () {
     var API_HOST = 'https://api.mixpanel.com';
 
     var identificationTypes = [
+        {
+            userIdentificationType: 'MPID',
+            expectedProperty: 'mpid1',
+        },
         {
             userIdentificationType: 'CustomerId',
             expectedProperty: 'cust1',
