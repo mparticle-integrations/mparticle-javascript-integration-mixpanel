@@ -16,7 +16,7 @@
 // ** Glossary of terms
 // Mixpanel Terms:
 // user_id: A unique identifier used by the Mixpanel.identify method to identify a unique user.  This will map to what an mParticle customer selects in the UI, which translates to the forwarderSettings.userIdentificationType.
-// device_id: A unique identifier used by Mixpanel to identify an anonymous user, usually a guid
+// device_id: A unique identifier used by Mixpanel to identify an anonymous user, usually a guid.  mParticle and Mixpnael generate their own device ids.
 // distinct_id: A unique identifier that Mixpanel uses to bridge a user and a device. Usually the
 //              distinct_id has a prefix of $device:guid<device_id> to denote an anonymouse user
 //              and this will be replaced by the user_id once the user has been identified by
@@ -189,31 +189,33 @@ var constructor = function () {
     }
 
     function onIdentifyComplete(user) {
-        // When mParticle identifies a user, the user might
-        // actually be anonymous. We only want to send an
+        // Mixpanel considers any user with an identity to be a known user.
+        // In mParticle, a user will always have an MPID even if they are anonymous.
+        // When mParticle identifies a user, because the user might
+        // actually be anonymous, we only want to send an
         // identify request to Mixpanel if the user is
-        // actually known. Only known (logged in) users
-        // will have userIdentities.
+        // actually known. If a user has any user identities, they are 
+        // considered to be "known" users.
         var userIdentities = getUserIdentities(user);
 
         if (!isEmpty(userIdentities)) {
             sendIdentifyRequest(user, userIdentities);
         } else {
-            return 'User is anonymous';
+            return 'Modified user does not have user identities and will not be sent to Mixpanel to Identify';
         }
     }
 
     function onModifyComplete(user) {
         // Mixpanel does not have the concept of modifying a
         // user's identity. For the time being, we will rely on
-        // doing a simple Mixpanel.identify request. However
+        // doing a simple Mixpanel.identify request for backwards compatibility. However
         // this method may be deprecated in a future release
         var userIdentities = getUserIdentities(user);
 
         if (!isEmpty(userIdentities)) {
             sendIdentifyRequest(user, userIdentities);
         } else {
-            return 'User is anonymous';
+            return 'Modified user does not have user identities and will not be sent to Mixpanel to Identify';
         }
     }
 
