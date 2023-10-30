@@ -15,7 +15,7 @@
 
 // ** Glossary of terms
 // Mixpanel Terms:
-// user_id: A unique identifier used by the Mixpanel.identify method to identify a unique user
+// user_id: A unique identifier used by the Mixpanel.identify method to identify a unique user.  This will map to what an mParticle customer selects in the UI, which translates to the forwarderSettings.userIdentificationType.
 // device_id: A unique identifier used by Mixpanel to identify an anonymous user, usually a guid
 // distinct_id: A unique identifier that Mixpanel uses to bridge a user and a device. Usually the
 //              distinct_id has a prefix of $device:guid<device_id> to denote an anonymouse user
