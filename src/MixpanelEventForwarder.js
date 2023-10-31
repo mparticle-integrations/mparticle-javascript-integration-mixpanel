@@ -201,7 +201,7 @@ var constructor = function () {
         if (!isEmpty(userIdentities)) {
             sendIdentifyRequest(user, userIdentities);
         } else {
-            return 'Modified user does not have user identities and will not be sent to Mixpanel to Identify';
+            return 'Identified user does not have user identities and will not be sent to Mixpanel to Identify';
         }
     }
 
