@@ -14,6 +14,17 @@ Object.defineProperty(exports, '__esModule', { value: true });
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
+
+// ** Glossary of terms
+// Mixpanel Terms:
+// user_id: A unique identifier used by the Mixpanel.identify method to identify a unique user.  This will map to what an mParticle customer selects in the UI, which translates to the forwarderSettings.userIdentificationType.
+// device_id: A unique identifier used by Mixpanel to identify an anonymous user, usually a guid.  mParticle and Mixpnael generate their own device ids.
+// distinct_id: A unique identifier that Mixpanel uses to bridge a user and a device. Usually the
+//              distinct_id has a prefix of $device:guid<device_id> to denote an anonymouse user
+//              and this will be replaced by the user_id once the user has been identified by
+//              a request to Mixpanel.identify
+
+// eslint-disable-next-line no-redeclare
 var name = 'MixpanelEventForwarder',
     moduleId = 10,
     MessageType = {
@@ -34,7 +45,8 @@ var renderSnippet = function() {
 };
 /* eslint-enable */
 
-var constructor = function() {
+// eslint-disable-next-line no-redeclare
+var constructor = function () {
     var self = this,
         isInitialized = false,
         forwarderSettings = null,
@@ -136,11 +148,89 @@ var constructor = function() {
         }
     }
 
-    function onUserIdentified(user) {
-        var idForMixpanel;
-        var userIdentities = user.getUserIdentities()
+    function getUserIdentities(user) {
+        return user.getUserIdentities()
             ? user.getUserIdentities().userIdentities
             : {};
+    }
+
+    function onLoginComplete(user) {
+        var userIdentities = getUserIdentities(user);
+
+        // When mParticle identifies a user, the user might
+        // actually be anonymous. We only want to send an
+        // identify request to Mixpanel if the user is
+        // actually known. Only known (logged in) users
+        // will have userIdentities.
+        if (!isEmpty(userIdentities)) {
+            sendIdentifyRequest(user, userIdentities);
+        } else {
+            return 'Logged in user does not have user identities and will not be sent to Mixpanel to Identify';
+        }
+    }
+
+    function onLogoutComplete() {
+        // For all Identity Requests, we run mixpanel.identify(<user_id>)
+        // as per Mixpanel's documentation https://docs.mixpanel.com/docs/tracking-methods/identifying-users
+        // except when a user logs out, where we run mixpanel.reset() to
+        // detach the Mixpanel distinct_id from the Mixpanel device_id
+
+        if (!isInitialized) {
+            return (
+                'Cannot call logout on forwarder: ' + name + ', not initialized'
+            );
+        }
+
+        try {
+            mixpanel.mparticle.reset();
+
+            return 'Successfully called reset on forwarder: ' + name;
+        } catch (e) {
+            return 'Cannot call reset on forwarder: ' + name + ': ' + e;
+        }
+    }
+
+    function onIdentifyComplete(user) {
+        // Mixpanel considers any user with an identity to be a known user.
+        // In mParticle, a user will always have an MPID even if they are anonymous.
+        // When mParticle identifies a user, because the user might
+        // actually be anonymous, we only want to send an
+        // identify request to Mixpanel if the user is
+        // actually known. If a user has any user identities, they are 
+        // considered to be "known" users.
+        var userIdentities = getUserIdentities(user);
+
+        if (!isEmpty(userIdentities)) {
+            sendIdentifyRequest(user, userIdentities);
+        } else {
+            return 'Identified user does not have user identities and will not be sent to Mixpanel to Identify';
+        }
+    }
+
+    function onModifyComplete(user) {
+        // Mixpanel does not have the concept of modifying a
+        // user's identity. For the time being, we will rely on
+        // doing a simple Mixpanel.identify request for backwards compatibility. However
+        // this method may be deprecated in a future release
+        var userIdentities = getUserIdentities(user);
+
+        if (!isEmpty(userIdentities)) {
+            sendIdentifyRequest(user, userIdentities);
+        } else {
+            return 'Modified user does not have user identities and will not be sent to Mixpanel to Identify';
+        }
+    }
+
+    function sendIdentifyRequest(user, userIdentities) {
+        // We should only make Mixpanel.identify requests
+        // when a user has userIdentities and is therefore
+        // a known mParticle user and not anonymous
+        if (isEmpty(userIdentities)) {
+            return;
+        }
+
+        var idForMixpanel;
+
         switch (forwarderSettings.userIdentificationType) {
             case 'CustomerId':
                 idForMixpanel = userIdentities.customerid;
@@ -231,7 +321,9 @@ var constructor = function() {
         try {
             mixpanel.mparticle.people.track_charge(
                 event.ProductAction.TotalAmount,
-                { $time: new Date().toISOString() }
+                {
+                    $time: new Date().toISOString(),
+                }
             );
         } catch (e) {
             return 'Cannot log commerce event on forwarder: ' + name + ': ' + e;
@@ -242,8 +334,12 @@ var constructor = function() {
     this.process = processEvent;
     this.setUserAttribute = setUserAttribute;
     this.setUserIdentity = setUserIdentity;
-    this.onUserIdentified = onUserIdentified;
     this.removeUserAttribute = removeUserAttribute;
+
+    this.onIdentifyComplete = onIdentifyComplete;
+    this.onLoginComplete = onLoginComplete;
+    this.onLogoutComplete = onLogoutComplete;
+    this.onModifyComplete = onModifyComplete;
 };
 
 function getId() {
@@ -280,6 +376,10 @@ function register(config) {
     );
 }
 
+function isEmpty(value) {
+    return value == null || !(Object.keys(value) || value).length;
+}
+
 function isObject(val) {
     return (
         val != null && typeof val === 'object' && Array.isArray(val) === false
@@ -296,6 +396,7 @@ if (typeof window !== 'undefined') {
     }
 }
 
+// eslint-disable-next-line no-undef
 var MixpanelEventForwarder = {
     register: register,
 };
