@@ -275,6 +275,32 @@ describe('Mixpanel Forwarder', function () {
 
             done();
         });
+
+        it('should NOT alter the event name when sending a page view to the reporting service', function (done) {
+            mParticle.forwarder.process({
+                EventDataType: MessageType.PageView,
+                EventName: 'Test Page Event',
+            });
+
+            window.mixpanel.mparticle.should.have.property('trackCalled', true);
+            window.mixpanel.mparticle.data.should.be
+                .instanceof(Array)
+                .and.have.lengthOf(2);
+
+            window.mixpanel.mparticle.data[0].should.be.type('string');
+            window.mixpanel.mparticle.data[1].should.be.instanceof(Object);
+
+            window.mixpanel.mparticle.data[0].should.be.equal(
+                'Viewed Test Page Event'
+            );
+            window.mixpanel.mparticle.data[1].should.be.an
+                .Object()
+                .and.be.empty();
+
+            reportService.event.EventName.should.be.equal('Test Page Event');
+
+            done();
+        });
     });
 
     describe('User events', function () {
