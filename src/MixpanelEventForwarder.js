@@ -91,7 +91,6 @@ var constructor = function () {
                 logEvent(event);
             } else if (event.EventDataType == MessageType.PageView) {
                 reportEvent = true;
-                logEvent(event);
                 logPageView(event);
             } else if (
                 event.EventDataType == MessageType.Commerce &&
