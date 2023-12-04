@@ -90,9 +90,8 @@ var constructor = function () {
                 reportEvent = true;
                 logEvent(event);
             } else if (event.EventDataType == MessageType.PageView) {
-                event.EventName = 'Viewed ' + event.EventName;
                 reportEvent = true;
-                logEvent(event);
+                logPageView(event);
             } else if (
                 event.EventDataType == MessageType.Commerce &&
                 event.ProductAction &&
@@ -294,6 +293,17 @@ var constructor = function () {
             }
         } catch (e) {
             return 'Cannot call unregister on forwarder: ' + name + ': ' + e;
+        }
+    }
+
+    function logPageView(event) {
+        var eventName = 'Viewed ' + event.EventName;
+        event.EventAttributes = event.EventAttributes || {};
+
+        try {
+            mixpanel.mparticle.track(eventName, event.EventAttributes);
+        } catch (e) {
+            return 'Cannot log event on forwarder: ' + name + ': ' + e;
         }
     }
 
