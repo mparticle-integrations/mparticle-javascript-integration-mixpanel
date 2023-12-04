@@ -1,3 +1,10 @@
+## [2.1.2](https://github.com/mparticle-integrations/mparticle-javascript-integration-mixpanel/compare/v2.1.1...v2.1.2) (2023-12-04)
+
+
+### Bug Fixes
+
+* Prevent event name prefix from being sent to Reporting Service ([#49](https://github.com/mparticle-integrations/mparticle-javascript-integration-mixpanel/issues/49)) ([f5b4455](https://github.com/mparticle-integrations/mparticle-javascript-integration-mixpanel/commit/f5b44554a227842733b66d8aaaec2379e389f521))
+
 ## [2.1.1](https://github.com/mparticle-integrations/mparticle-javascript-integration-mixpanel/compare/v2.1.0...v2.1.1) (2023-10-31)
 
 
