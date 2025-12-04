@@ -202,6 +202,601 @@ describe('Mixpanel Forwarder', function () {
             done();
         });
 
+        it('should initialize with Session Replay settings', function (done) {
+            window.mixpanel = new MPMock();
+            mParticle.forwarder.init(
+                {
+                    token: 'token123',
+                    baseUrl: API_HOST,
+                    recordSessionsPercent: '20',
+                    recordHeatmapData: 'True',
+                    autocapture: 'False',
+                },
+                reportService.cb,
+                true
+            );
+
+            window.mixpanel.settings.should.have.property(
+                'record_sessions_percent',
+                20
+            );
+            window.mixpanel.settings.should.have.property(
+                'record_heatmap_data',
+                true
+            );
+            window.mixpanel.settings.should.have.property('autocapture', false);
+
+            done();
+        });
+
+        it('should handle invalid recordSessionsPercent values', function (done) {
+            window.mixpanel = new MPMock();
+            mParticle.forwarder.init(
+                {
+                    token: 'token123',
+                    baseUrl: API_HOST,
+                    recordSessionsPercent: 'invalid',
+                },
+                reportService.cb,
+                true
+            );
+
+            window.mixpanel.settings.should.not.have.property(
+                'record_sessions_percent'
+            );
+
+            done();
+        });
+
+        it('should initialize with privacy and masking settings', function (done) {
+            window.mixpanel = new MPMock();
+            mParticle.forwarder.init(
+                {
+                    token: 'token123',
+                    baseUrl: API_HOST,
+                    recordMaskTextSelector: '.pii',
+                    recordBlockSelector: 'img, video',
+                    recordMaskTextClass: 'sensitive',
+                    recordBlockClass: 'blocked',
+                },
+                reportService.cb,
+                true
+            );
+
+            window.mixpanel.settings.should.have.property(
+                'record_mask_text_selector',
+                '.pii'
+            );
+            window.mixpanel.settings.should.have.property(
+                'record_block_selector',
+                'img, video'
+            );
+            window.mixpanel.settings.should.have.property(
+                'record_mask_text_class',
+                'sensitive'
+            );
+            window.mixpanel.settings.should.have.property(
+                'record_block_class',
+                'blocked'
+            );
+
+            done();
+        });
+
+        it('should handle boolean settings for Session Replay correctly', function (done) {
+            window.mixpanel = new MPMock();
+            mParticle.forwarder.init(
+                {
+                    token: 'token123',
+                    baseUrl: API_HOST,
+                    recordHeatmapData: 'False',
+                    autocapture: 'True',
+                    recordCanvas: 'True',
+                },
+                reportService.cb,
+                true
+            );
+
+            // Verify all boolean settings are actual booleans, not strings
+            window.mixpanel.settings.should.have.property(
+                'record_heatmap_data',
+                false
+            );
+            window.mixpanel.settings.record_heatmap_data.should.be.type(
+                'boolean'
+            );
+
+            window.mixpanel.settings.should.have.property('autocapture', true);
+            window.mixpanel.settings.autocapture.should.be.type('boolean');
+
+            window.mixpanel.settings.should.have.property(
+                'record_canvas',
+                true
+            );
+            window.mixpanel.settings.record_canvas.should.be.type('boolean');
+
+            done();
+        });
+
+        it('should handle numeric settings for Session Replay correctly', function (done) {
+            window.mixpanel = new MPMock();
+            mParticle.forwarder.init(
+                {
+                    token: 'token123',
+                    baseUrl: API_HOST,
+                    recordSessionsPercent: '50',
+                    recordIdleTimeoutMs: '1800000',
+                    recordMaxMs: '86400000',
+                    recordMinMs: '1000',
+                },
+                reportService.cb,
+                true
+            );
+
+            // Verify all integer settings are actual numbers, not strings
+            window.mixpanel.settings.should.have.property(
+                'record_sessions_percent',
+                50
+            );
+            window.mixpanel.settings.record_sessions_percent.should.be.type(
+                'number'
+            );
+
+            window.mixpanel.settings.should.have.property(
+                'record_idle_timeout_ms',
+                1800000
+            );
+            window.mixpanel.settings.record_idle_timeout_ms.should.be.type(
+                'number'
+            );
+
+            window.mixpanel.settings.should.have.property(
+                'record_max_ms',
+                86400000
+            );
+            window.mixpanel.settings.record_max_ms.should.be.type('number');
+
+            window.mixpanel.settings.should.have.property(
+                'record_min_ms',
+                1000
+            );
+            window.mixpanel.settings.record_min_ms.should.be.type('number');
+
+            done();
+        });
+
+        it('should handle invalid timing values gracefully', function (done) {
+            window.mixpanel = new MPMock();
+            mParticle.forwarder.init(
+                {
+                    token: 'token123',
+                    baseUrl: API_HOST,
+                    recordIdleTimeoutMs: 'invalid',
+                    recordMaxMs: 'not-a-number',
+                    recordMinMs: 'not-a-number',
+                },
+                reportService.cb,
+                true
+            );
+
+            window.mixpanel.settings.should.not.have.property(
+                'record_idle_timeout_ms'
+            );
+            window.mixpanel.settings.should.not.have.property('record_max_ms');
+            window.mixpanel.settings.should.not.have.property('record_min_ms');
+
+            done();
+        });
+
+        it('should not set empty string privacy selectors', function (done) {
+            window.mixpanel = new MPMock();
+            mParticle.forwarder.init(
+                {
+                    token: 'token123',
+                    baseUrl: API_HOST,
+                    recordMaskTextSelector: '',
+                    recordBlockClass: '',
+                },
+                reportService.cb,
+                true
+            );
+
+            window.mixpanel.settings.should.not.have.property(
+                'record_mask_text_selector'
+            );
+            window.mixpanel.settings.should.not.have.property(
+                'record_block_class'
+            );
+
+            done();
+        });
+
+        it('should accept recordSessionsPercent with lower boundary 0', function (done) {
+            window.mixpanel = new MPMock();
+            mParticle.forwarder.init(
+                {
+                    token: 'token123',
+                    baseUrl: API_HOST,
+                    recordSessionsPercent: '0',
+                },
+                reportService.cb,
+                true
+            );
+
+            window.mixpanel.settings.should.have.property(
+                'record_sessions_percent',
+                0
+            );
+            window.mixpanel.settings.record_sessions_percent.should.be.type(
+                'number'
+            );
+
+            done();
+        });
+
+        it('should accept recordSessionsPercent upper boundary 100', function (done) {
+            window.mixpanel = new MPMock();
+            mParticle.forwarder.init(
+                {
+                    token: 'token123',
+                    baseUrl: API_HOST,
+                    recordSessionsPercent: '100',
+                },
+                reportService.cb,
+                true
+            );
+
+            window.mixpanel.settings.should.have.property(
+                'record_sessions_percent',
+                100
+            );
+            window.mixpanel.settings.record_sessions_percent.should.be.type(
+                'number'
+            );
+
+            done();
+        });
+
+        it('should reject negative recordSessionsPercent', function (done) {
+            window.mixpanel = new MPMock();
+            mParticle.forwarder.init(
+                {
+                    token: 'token123',
+                    baseUrl: API_HOST,
+                    recordSessionsPercent: '-10',
+                },
+                reportService.cb,
+                true
+            );
+
+            window.mixpanel.settings.should.not.have.property(
+                'record_sessions_percent'
+            );
+
+            done();
+        });
+
+        it('should reject recordSessionsPercent above range (> 100)', function (done) {
+            window.mixpanel = new MPMock();
+            mParticle.forwarder.init(
+                {
+                    token: 'token123',
+                    baseUrl: API_HOST,
+                    recordSessionsPercent: '150',
+                },
+                reportService.cb,
+                true
+            );
+
+            window.mixpanel.settings.should.not.have.property(
+                'record_sessions_percent'
+            );
+
+            done();
+        });
+
+        it('should handle null and undefined for integer settings', function (done) {
+            window.mixpanel = new MPMock();
+            mParticle.forwarder.init(
+                {
+                    token: 'token123',
+                    baseUrl: API_HOST,
+                    recordSessionsPercent: null,
+                    recordIdleTimeoutMs: undefined,
+                },
+                reportService.cb,
+                true
+            );
+
+            window.mixpanel.settings.should.not.have.property(
+                'record_sessions_percent'
+            );
+            window.mixpanel.settings.should.not.have.property(
+                'record_idle_timeout_ms'
+            );
+
+            done();
+        });
+
+        it('should handle null and undefined for string settings', function (done) {
+            window.mixpanel = new MPMock();
+            mParticle.forwarder.init(
+                {
+                    token: 'token123',
+                    baseUrl: API_HOST,
+                    recordMaskTextSelector: null,
+                    recordBlockSelector: undefined,
+                    recordMaskTextClass: null,
+                },
+                reportService.cb,
+                true
+            );
+
+            window.mixpanel.settings.should.not.have.property(
+                'record_mask_text_selector'
+            );
+            window.mixpanel.settings.should.not.have.property(
+                'record_block_selector'
+            );
+            window.mixpanel.settings.should.not.have.property(
+                'record_mask_text_class'
+            );
+
+            done();
+        });
+
+        it('should handle null and undefined for boolean settings', function (done) {
+            window.mixpanel = new MPMock();
+            mParticle.forwarder.init(
+                {
+                    token: 'token123',
+                    baseUrl: API_HOST,
+                    recordHeatmapData: null,
+                    autocapture: undefined,
+                },
+                reportService.cb,
+                true
+            );
+
+            window.mixpanel.settings.should.not.have.property(
+                'record_heatmap_data'
+            );
+            window.mixpanel.settings.should.not.have.property('autocapture');
+
+            done();
+        });
+
+        it('should accept recordIdleTimeoutMs with large positive value', function (done) {
+            window.mixpanel = new MPMock();
+            mParticle.forwarder.init(
+                {
+                    token: 'token123',
+                    baseUrl: API_HOST,
+                    recordIdleTimeoutMs: '18000000000',
+                },
+                reportService.cb,
+                true
+            );
+
+            window.mixpanel.settings.should.have.property(
+                'record_idle_timeout_ms',
+                18000000000
+            );
+            window.mixpanel.settings.record_idle_timeout_ms.should.be.type(
+                'number'
+            );
+
+            done();
+        });
+
+        it('should preserve string values for selector settings without type conversion', function (done) {
+            window.mixpanel = new MPMock();
+            mParticle.forwarder.init(
+                {
+                    token: 'token123',
+                    baseUrl: API_HOST,
+                    recordMaskTextSelector: '.pii, .sensitive, [data-private]',
+                    recordBlockSelector: 'iframe, img, video',
+                    recordMaskTextClass: 'mp-mask-text',
+                    recordBlockClass: 'mp-block-element',
+                },
+                reportService.cb,
+                true
+            );
+
+            // Verify strings are preserved as-is
+            window.mixpanel.settings.record_mask_text_selector.should.equal(
+                '.pii, .sensitive, [data-private]'
+            );
+            window.mixpanel.settings.record_mask_text_selector.should.be.type(
+                'string'
+            );
+            window.mixpanel.settings.record_block_selector.should.equal(
+                'iframe, img, video'
+            );
+            window.mixpanel.settings.record_block_selector.should.be.type(
+                'string'
+            );
+            window.mixpanel.settings.record_mask_text_class.should.equal(
+                'mp-mask-text'
+            );
+            window.mixpanel.settings.record_mask_text_class.should.be.type(
+                'string'
+            );
+            window.mixpanel.settings.record_block_class.should.equal(
+                'mp-block-element'
+            );
+            window.mixpanel.settings.record_block_class.should.be.type(
+                'string'
+            );
+
+            done();
+        });
+
+        it('should handle mixed valid and invalid integer values', function (done) {
+            window.mixpanel = new MPMock();
+            mParticle.forwarder.init(
+                {
+                    token: 'token123',
+                    baseUrl: API_HOST,
+                    recordSessionsPercent: '50',
+                    recordIdleTimeoutMs: 'invalid',
+                    recordMaxMs: '-100',
+                    recordMinMs: '1000',
+                },
+                reportService.cb,
+                true
+            );
+
+            window.mixpanel.settings.should.have.property(
+                'record_sessions_percent',
+                50
+            );
+            window.mixpanel.settings.should.not.have.property(
+                'record_idle_timeout_ms'
+            );
+            window.mixpanel.settings.should.have.property(
+                'record_max_ms',
+                -100
+            );
+            window.mixpanel.settings.should.have.property(
+                'record_min_ms',
+                1000
+            );
+
+            done();
+        });
+
+        it('should handle all Session Replay settings together with correct types', function (done) {
+            window.mixpanel = new MPMock();
+            mParticle.forwarder.init(
+                {
+                    token: 'token123',
+                    baseUrl: API_HOST,
+                    recordSessionsPercent: '75',
+                    recordHeatmapData: 'True',
+                    autocapture: 'True',
+                    recordCanvas: 'False',
+                    recordMaskTextSelector: '.secret',
+                    recordBlockSelector: 'video',
+                    recordMaskTextClass: 'masked',
+                    recordBlockClass: 'blocked',
+                    recordIdleTimeoutMs: '1800000',
+                    recordMaxMs: '86400000',
+                    recordMinMs: '5000',
+                },
+                reportService.cb,
+                true
+            );
+
+            // Verify all settings with correct types
+            window.mixpanel.settings.record_sessions_percent.should.equal(75);
+            window.mixpanel.settings.record_sessions_percent.should.be.type(
+                'number'
+            );
+
+            window.mixpanel.settings.record_heatmap_data.should.equal(true);
+            window.mixpanel.settings.record_heatmap_data.should.be.type(
+                'boolean'
+            );
+
+            window.mixpanel.settings.autocapture.should.equal(true);
+            window.mixpanel.settings.autocapture.should.be.type('boolean');
+
+            window.mixpanel.settings.record_canvas.should.equal(false);
+            window.mixpanel.settings.record_canvas.should.be.type('boolean');
+
+            window.mixpanel.settings.record_mask_text_selector.should.equal(
+                '.secret'
+            );
+            window.mixpanel.settings.record_mask_text_selector.should.be.type(
+                'string'
+            );
+            window.mixpanel.settings.record_block_selector.should.equal(
+                'video'
+            );
+            window.mixpanel.settings.record_block_selector.should.be.type(
+                'string'
+            );
+            window.mixpanel.settings.record_mask_text_class.should.equal(
+                'masked'
+            );
+            window.mixpanel.settings.record_mask_text_class.should.be.type(
+                'string'
+            );
+            window.mixpanel.settings.record_block_class.should.equal('blocked');
+            window.mixpanel.settings.record_block_class.should.be.type(
+                'string'
+            );
+            window.mixpanel.settings.record_idle_timeout_ms.should.equal(
+                1800000
+            );
+            window.mixpanel.settings.record_idle_timeout_ms.should.be.type(
+                'number'
+            );
+            window.mixpanel.settings.record_max_ms.should.equal(86400000);
+            window.mixpanel.settings.record_max_ms.should.be.type('number');
+
+            window.mixpanel.settings.record_min_ms.should.equal(5000);
+            window.mixpanel.settings.record_min_ms.should.be.type('number');
+
+            done();
+        });
+
+        it('should handle extreme timing values within valid ranges', function (done) {
+            window.mixpanel = new MPMock();
+            mParticle.forwarder.init(
+                {
+                    token: 'token123',
+                    baseUrl: API_HOST,
+                    recordIdleTimeoutMs: '2147483647', // Max 32-bit int
+                    recordMaxMs: '86400000', // 24 hours in ms
+                    recordMinMs: '1',
+                },
+                reportService.cb,
+                true
+            );
+
+            window.mixpanel.settings.should.have.property(
+                'record_idle_timeout_ms',
+                2147483647
+            );
+            window.mixpanel.settings.should.have.property(
+                'record_max_ms',
+                86400000
+            );
+            window.mixpanel.settings.should.have.property('record_min_ms', 1);
+
+            done();
+        });
+
+        it('should handle special characters in selector settings', function (done) {
+            window.mixpanel = new MPMock();
+            mParticle.forwarder.init(
+                {
+                    token: 'token123',
+                    baseUrl: API_HOST,
+                    recordMaskTextSelector:
+                        '[data-sensitive="true"], .pii, #secret',
+                    recordBlockSelector:
+                        'iframe[src*="youtube"], video:not(.public)',
+                },
+                reportService.cb,
+                true
+            );
+
+            window.mixpanel.settings.record_mask_text_selector.should.equal(
+                '[data-sensitive="true"], .pii, #secret'
+            );
+            window.mixpanel.settings.record_block_selector.should.equal(
+                'iframe[src*="youtube"], video:not(.public)'
+            );
+
+            done();
+        });
+    });
+
+    describe('Logging events', function () {
         it('should log a page view with "Viewed" prepended to the event name', function (done) {
             mParticle.forwarder.process({
                 EventDataType: MessageType.PageView,

@@ -62,13 +62,88 @@ var constructor = function () {
             if (!testMode) {
                 renderSnippet();
             }
-            mixpanel.init(
-                settings.token,
-                {
-                    api_host: forwarderSettings.baseUrl,
-                },
-                'mparticle'
-            );
+            // Build init options object
+            var initOptions = {
+                api_host: forwarderSettings.baseUrl,
+            };
+
+            if (forwarderSettings.recordSessionsPercent != null) {
+                var sessionPercent = parseInt(
+                    forwarderSettings.recordSessionsPercent,
+                    10
+                );
+                if (
+                    !isNaN(sessionPercent) &&
+                    sessionPercent >= 0 &&
+                    sessionPercent <= 100
+                ) {
+                    initOptions.record_sessions_percent = sessionPercent;
+                }
+            }
+
+            if (forwarderSettings.recordHeatmapData != null) {
+                initOptions.record_heatmap_data =
+                    forwarderSettings.recordHeatmapData === 'True';
+            }
+
+            if (forwarderSettings.autocapture != null) {
+                initOptions.autocapture =
+                    forwarderSettings.autocapture === 'True';
+            }
+
+            // Privacy and masking settings
+            if (forwarderSettings.recordMaskTextSelector) {
+                initOptions.record_mask_text_selector =
+                    forwarderSettings.recordMaskTextSelector;
+            }
+
+            if (forwarderSettings.recordBlockSelector) {
+                initOptions.record_block_selector =
+                    forwarderSettings.recordBlockSelector;
+            }
+
+            if (forwarderSettings.recordBlockClass) {
+                initOptions.record_block_class =
+                    forwarderSettings.recordBlockClass;
+            }
+
+            if (forwarderSettings.recordMaskTextClass) {
+                initOptions.record_mask_text_class =
+                    forwarderSettings.recordMaskTextClass;
+            }
+
+            // Canvas recording (experimental)
+            if (forwarderSettings.recordCanvas != null) {
+                initOptions.record_canvas =
+                    forwarderSettings.recordCanvas === 'True';
+            }
+
+            // Timing settings
+            if (forwarderSettings.recordIdleTimeoutMs != null) {
+                var idleTimeoutMs = parseInt(
+                    forwarderSettings.recordIdleTimeoutMs,
+                    10
+                );
+                if (!isNaN(idleTimeoutMs)) {
+                    initOptions.record_idle_timeout_ms = idleTimeoutMs;
+                }
+            }
+
+            if (forwarderSettings.recordMaxMs != null) {
+                var maxMs = parseInt(forwarderSettings.recordMaxMs, 10);
+                if (!isNaN(maxMs)) {
+                    initOptions.record_max_ms = maxMs;
+                }
+            }
+
+            if (forwarderSettings.recordMinMs != null) {
+                var minMs = parseInt(forwarderSettings.recordMinMs, 10);
+                if (!isNaN(minMs)) {
+                    initOptions.record_min_ms = minMs;
+                }
+            }
+
+            mixpanel.init(settings.token, initOptions, 'mparticle');
 
             isInitialized = true;
 
