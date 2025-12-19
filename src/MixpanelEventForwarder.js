@@ -115,14 +115,9 @@ var constructor = function () {
 
             // Process numeric settings
             numericSettings.forEach(function (setting) {
-                if (forwarderSettings[setting.key] != null) {
-                    var numericValue = parseInt(
-                        forwarderSettings[setting.key],
-                        10
-                    );
-                    if (!isNaN(numericValue)) {
-                        initOptions[setting.mappedKey] = numericValue;
-                    }
+                var numericValue = parseIntSafe(forwarderSettings[setting.key]);
+                if (numericValue !== undefined) {
+                    initOptions[setting.mappedKey] = numericValue;
                 }
             });
 
@@ -458,6 +453,11 @@ function isObject(val) {
     return (
         val != null && typeof val === 'object' && Array.isArray(val) === false
     );
+}
+
+function parseIntSafe(value) {
+    var n = parseInt(value, 10);
+    return isNaN(n) ? undefined : n;
 }
 
 if (typeof window !== 'undefined') {
