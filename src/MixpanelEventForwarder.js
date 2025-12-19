@@ -72,11 +72,8 @@ var constructor = function () {
                     forwarderSettings.recordSessionsPercent,
                     10
                 );
-                if (
-                    !isNaN(sessionPercent) &&
-                    sessionPercent >= 0 &&
-                    sessionPercent <= 100
-                ) {
+
+                if (!isNaN(sessionPercent)) {
                     initOptions.record_sessions_percent = sessionPercent;
                 }
             }
