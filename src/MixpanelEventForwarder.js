@@ -67,78 +67,72 @@ var constructor = function () {
                 api_host: forwarderSettings.baseUrl,
             };
 
-            if (forwarderSettings.recordSessionsPercent != null) {
-                var sessionPercent = parseInt(
-                    forwarderSettings.recordSessionsPercent,
-                    10
-                );
+            // Session Replay boolean settings
+            var boolSettings = [
+                { key: 'recordHeatmapData', mappedKey: 'record_heatmap_data' },
+                { key: 'autocapture', mappedKey: 'autocapture' },
+                { key: 'recordCanvas', mappedKey: 'record_canvas' },
+            ];
 
-                if (!isNaN(sessionPercent)) {
-                    initOptions.record_sessions_percent = sessionPercent;
+            // Session Replay numeric settings
+            var numericSettings = [
+                {
+                    key: 'recordSessionsPercent',
+                    mappedKey: 'record_sessions_percent',
+                },
+                {
+                    key: 'recordIdleTimeoutMs',
+                    mappedKey: 'record_idle_timeout_ms',
+                },
+                { key: 'recordMaxMs', mappedKey: 'record_max_ms' },
+                { key: 'recordMinMs', mappedKey: 'record_min_ms' },
+            ];
+
+            // Session Replay string settings
+            var stringSettings = [
+                {
+                    key: 'recordMaskTextSelector',
+                    mappedKey: 'record_mask_text_selector',
+                },
+                {
+                    key: 'recordBlockSelector',
+                    mappedKey: 'record_block_selector',
+                },
+                { key: 'recordBlockClass', mappedKey: 'record_block_class' },
+                {
+                    key: 'recordMaskTextClass',
+                    mappedKey: 'record_mask_text_class',
+                },
+            ];
+
+            // Process boolean settings
+            boolSettings.forEach(function (setting) {
+                if (forwarderSettings[setting.key] != null) {
+                    initOptions[setting.mappedKey] =
+                        forwarderSettings[setting.key] === 'True';
                 }
-            }
+            });
 
-            if (forwarderSettings.recordHeatmapData != null) {
-                initOptions.record_heatmap_data =
-                    forwarderSettings.recordHeatmapData === 'True';
-            }
-
-            if (forwarderSettings.autocapture != null) {
-                initOptions.autocapture =
-                    forwarderSettings.autocapture === 'True';
-            }
-
-            // Privacy and masking settings
-            if (forwarderSettings.recordMaskTextSelector) {
-                initOptions.record_mask_text_selector =
-                    forwarderSettings.recordMaskTextSelector;
-            }
-
-            if (forwarderSettings.recordBlockSelector) {
-                initOptions.record_block_selector =
-                    forwarderSettings.recordBlockSelector;
-            }
-
-            if (forwarderSettings.recordBlockClass) {
-                initOptions.record_block_class =
-                    forwarderSettings.recordBlockClass;
-            }
-
-            if (forwarderSettings.recordMaskTextClass) {
-                initOptions.record_mask_text_class =
-                    forwarderSettings.recordMaskTextClass;
-            }
-
-            // Canvas recording (experimental)
-            if (forwarderSettings.recordCanvas != null) {
-                initOptions.record_canvas =
-                    forwarderSettings.recordCanvas === 'True';
-            }
-
-            // Timing settings
-            if (forwarderSettings.recordIdleTimeoutMs != null) {
-                var idleTimeoutMs = parseInt(
-                    forwarderSettings.recordIdleTimeoutMs,
-                    10
-                );
-                if (!isNaN(idleTimeoutMs)) {
-                    initOptions.record_idle_timeout_ms = idleTimeoutMs;
+            // Process numeric settings
+            numericSettings.forEach(function (setting) {
+                if (forwarderSettings[setting.key] != null) {
+                    var numericValue = parseInt(
+                        forwarderSettings[setting.key],
+                        10
+                    );
+                    if (!isNaN(numericValue)) {
+                        initOptions[setting.mappedKey] = numericValue;
+                    }
                 }
-            }
+            });
 
-            if (forwarderSettings.recordMaxMs != null) {
-                var maxMs = parseInt(forwarderSettings.recordMaxMs, 10);
-                if (!isNaN(maxMs)) {
-                    initOptions.record_max_ms = maxMs;
+            // Process string settings
+            stringSettings.forEach(function (setting) {
+                if (forwarderSettings[setting.key]) {
+                    initOptions[setting.mappedKey] =
+                        forwarderSettings[setting.key];
                 }
-            }
-
-            if (forwarderSettings.recordMinMs != null) {
-                var minMs = parseInt(forwarderSettings.recordMinMs, 10);
-                if (!isNaN(minMs)) {
-                    initOptions.record_min_ms = minMs;
-                }
-            }
+            });
 
             mixpanel.init(settings.token, initOptions, 'mparticle');
 
@@ -265,7 +259,7 @@ var constructor = function () {
         // When mParticle identifies a user, because the user might
         // actually be anonymous, we only want to send an
         // identify request to Mixpanel if the user is
-        // actually known. If a user has any user identities, they are 
+        // actually known. If a user has any user identities, they are
         // considered to be "known" users.
         var userIdentities = getUserIdentities(user);
 
