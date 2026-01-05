@@ -123,7 +123,7 @@ var constructor = function () {
 
             // Process string settings
             stringSettings.forEach(function (setting) {
-                if (forwarderSettings[setting.key]) {
+                if (!isEmpty(forwarderSettings[setting.key])) {
                     initOptions[setting.mappedKey] =
                         forwarderSettings[setting.key];
                 }
