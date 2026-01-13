@@ -63,13 +63,74 @@ var mpMixpanelKit = (function (exports) {
                 if (!testMode) {
                     renderSnippet();
                 }
-                mixpanel.init(
-                    settings.token,
+                // Build init options object
+                var initOptions = {
+                    api_host: forwarderSettings.baseUrl,
+                };
+
+                // Session Replay boolean settings
+                var boolSettings = [
+                    { key: 'recordHeatmapData', mappedKey: 'record_heatmap_data' },
+                    { key: 'autocapture', mappedKey: 'autocapture' },
+                    { key: 'recordCanvas', mappedKey: 'record_canvas' },
+                ];
+
+                // Session Replay numeric settings
+                var numericSettings = [
                     {
-                        api_host: forwarderSettings.baseUrl,
+                        key: 'recordSessionsPercent',
+                        mappedKey: 'record_sessions_percent',
                     },
-                    'mparticle'
-                );
+                    {
+                        key: 'recordIdleTimeoutMs',
+                        mappedKey: 'record_idle_timeout_ms',
+                    },
+                    { key: 'recordMaxMs', mappedKey: 'record_max_ms' },
+                    { key: 'recordMinMs', mappedKey: 'record_min_ms' },
+                ];
+
+                // Session Replay string settings
+                var stringSettings = [
+                    {
+                        key: 'recordMaskTextSelector',
+                        mappedKey: 'record_mask_text_selector',
+                    },
+                    {
+                        key: 'recordBlockSelector',
+                        mappedKey: 'record_block_selector',
+                    },
+                    { key: 'recordBlockClass', mappedKey: 'record_block_class' },
+                    {
+                        key: 'recordMaskTextClass',
+                        mappedKey: 'record_mask_text_class',
+                    },
+                ];
+
+                // Process boolean settings
+                boolSettings.forEach(function (setting) {
+                    if (forwarderSettings[setting.key] != null) {
+                        initOptions[setting.mappedKey] =
+                            forwarderSettings[setting.key] === 'True';
+                    }
+                });
+
+                // Process numeric settings
+                numericSettings.forEach(function (setting) {
+                    var numericValue = parseIntSafe(forwarderSettings[setting.key]);
+                    if (numericValue !== undefined) {
+                        initOptions[setting.mappedKey] = numericValue;
+                    }
+                });
+
+                // Process string settings
+                stringSettings.forEach(function (setting) {
+                    if (forwarderSettings[setting.key]) {
+                        initOptions[setting.mappedKey] =
+                            forwarderSettings[setting.key];
+                    }
+                });
+
+                mixpanel.init(settings.token, initOptions, 'mparticle');
 
                 isInitialized = true;
 
@@ -194,7 +255,7 @@ var mpMixpanelKit = (function (exports) {
             // When mParticle identifies a user, because the user might
             // actually be anonymous, we only want to send an
             // identify request to Mixpanel if the user is
-            // actually known. If a user has any user identities, they are 
+            // actually known. If a user has any user identities, they are
             // considered to be "known" users.
             var userIdentities = getUserIdentities(user);
 
@@ -393,6 +454,11 @@ var mpMixpanelKit = (function (exports) {
         return (
             val != null && typeof val === 'object' && Array.isArray(val) === false
         );
+    }
+
+    function parseIntSafe(value) {
+        var n = parseInt(value, 10);
+        return isNaN(n) ? undefined : n;
     }
 
     if (typeof window !== 'undefined') {
