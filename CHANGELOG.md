@@ -1,3 +1,10 @@
+# [2.2.0](https://github.com/mparticle-integrations/mparticle-javascript-integration-mixpanel/compare/v2.1.2...v2.2.0) (2026-01-13)
+
+
+### Features
+
+* Add Mixpanel Session Replay settings support ([#52](https://github.com/mparticle-integrations/mparticle-javascript-integration-mixpanel/issues/52)) ([d6f0845](https://github.com/mparticle-integrations/mparticle-javascript-integration-mixpanel/commit/d6f084503f5cfea58b07721f717fab26f7470950))
+
 ## [2.1.2](https://github.com/mparticle-integrations/mparticle-javascript-integration-mixpanel/compare/v2.1.1...v2.1.2) (2023-12-04)
 
 
